@@ -366,12 +366,12 @@ PERL		= perl
 CHECK		= sparse
 
 ifeq ($(CONFIG_FIPS_FMP),)
-    READELF        = $(CROSS_COMPILE)readelf
+    READELF        = $(if $(LLVM),llvm-readelf,$(CROSS_COMPILE)readelf)
     export READELF
 endif
 
 ifeq ($(CONFIG_CRYPTO_FIPS),)
-    READELF        = $(CROSS_COMPILE)readelf
+    READELF        = $(if $(LLVM),llvm-readelf,$(CROSS_COMPILE)readelf)
     export READELF
 endif
 
@@ -617,6 +617,10 @@ endif # $(dot-config)
 all: vmlinux
 
 ifeq ($(cc-name),clang)
+# Modern LLVM-only builders set CLANG_TRIPLE without a GCC toolchain prefix.
+ifneq ($(CLANG_TRIPLE),)
+CLANG_FLAGS := --target=$(notdir $(CLANG_TRIPLE:%-=%))
+endif
 ifneq ($(CROSS_COMPILE),)
 CLANG_TRIPLE ?= $(CROSS_COMPILE)
 CLANG_FLAGS := --target=$(notdir $(CLANG_TRIPLE:%-=%))
